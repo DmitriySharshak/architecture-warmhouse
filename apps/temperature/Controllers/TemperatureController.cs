@@ -15,6 +15,7 @@ namespace Temperature.Controllers
             _logger = logger;
             _db = db;
         }
+
         [HttpGet()]
         public WeatherForecast Get(string location)
         {
@@ -27,6 +28,33 @@ namespace Temperature.Controllers
             if (sensor == null)
             {
                 _logger.LogError($"Sensor not found for {location}");
+                return new WeatherForecast();
+            }
+
+            return new WeatherForecast()
+            {
+                Description = "",
+                Location    = sensor.Location,
+                SensorID    = sensor.Id,
+                SensorType  = sensor.Type,
+                Status      = sensor.Status,
+                Timestamp   = DateTimeOffset.UtcNow.UtcDateTime,
+                Unit        = sensor.Unit,
+                Value       = tempC
+            };
+        }
+
+        [HttpGet("{id:int}")]
+        public WeatherForecast Get(int id)
+        {
+            var tempC = Random.Shared.Next(-20, 55);
+            _logger.LogInformation($"id: {id}; tempC: {tempC}");
+
+            var sensor = _db.Sensors.FirstOrDefault(q=>q.Id==id);
+            
+            if (sensor == null)
+            {
+                _logger.LogError($"Sensor not found by id={id}");
                 return new WeatherForecast();
             }
 
