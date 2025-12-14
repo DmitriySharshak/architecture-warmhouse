@@ -24,6 +24,7 @@ services:
     container_name: temperature-api
     environment:
       ASPNETCORE_URLS: "http://+:8081"
+      ConnectionStrings__SmartHome: User ID=postgres;Password=postgres;Server=postgres;Port=5432;Database=smarthome;Pooling=true;MaxPoolSize=20;      
     ports:
       - "8081:8081" 
     networks:

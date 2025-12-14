@@ -2,12 +2,20 @@ namespace Temperature.Models
 {
     public class WeatherForecast
     {
-        public DateOnly Date { get; set; }
+        public double Value { get; set; }
 
-        public int TemperatureC { get; set; }
+        public string Unit { get; set; }
 
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        public DateTimeOffset Timestamp { get; set; }
 
-        public string? Summary { get; set; }
+        public string Location { get; set; }
+
+        public string Status { get; set; }
+
+        public int SensorID { get; set; }
+
+        public string SensorType { get; set; }
+
+        public string Description { get; set; }
     }
 }

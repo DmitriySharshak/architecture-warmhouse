@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Temperature.Models;
 
 namespace Temperature.Controllers
 {   
@@ -6,36 +7,40 @@ namespace Temperature.Controllers
     [Route("[controller]")]
     public class TemperatureController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
 
         private readonly ILogger<TemperatureController> _logger;
-
-        public TemperatureController(ILogger<TemperatureController> logger)
+        private readonly SmartHomeDb _db;
+        public TemperatureController(SmartHomeDb db, ILogger<TemperatureController> logger)
         {
             _logger = logger;
+            _db = db;
         }
         [HttpGet()]
-        public int Get(string location)
+        public WeatherForecast Get(string location)
         {
             var tempC = Random.Shared.Next(-20, 55);
             _logger.LogInformation($"location: {location}; tempC: {tempC}");
 
-            return tempC;
-        }
+            var sensors = _db.Sensors.ToArray();
+            var sensor = sensors.FirstOrDefault(q=>string.Equals(q.Location, location, StringComparison.CurrentCultureIgnoreCase));
 
-        //[HttpGet()]
-        //public IEnumerable<WeatherForecast> Get(string location)
-        //{
-        //    return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        //    {
-        //        Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-        //        TemperatureC = Random.Shared.Next(-20, 55),
-        //        Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        //    })
-        //    .ToArray();
-        //}
+            if (sensor == null)
+            {
+                _logger.LogError($"Sensor not found for {location}");
+                return new WeatherForecast();
+            }
+
+            return new WeatherForecast()
+            {
+                Description = "",
+                Location    = sensor.Location,
+                SensorID    = sensor.Id,
+                SensorType  = sensor.Type,
+                Status      = sensor.Status,
+                Timestamp   = DateTimeOffset.UtcNow.UtcDateTime,
+                Unit        = sensor.Unit,
+                Value       = tempC
+            };
+        }
     }
 }
