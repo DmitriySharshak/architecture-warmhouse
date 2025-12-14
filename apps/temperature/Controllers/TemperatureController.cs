@@ -20,54 +20,75 @@ namespace Temperature.Controllers
         public WeatherForecast Get(string location)
         {
             var tempC = Random.Shared.Next(-20, 55);
-            _logger.LogInformation($"location: {location}; tempC: {tempC}");
+            
 
-            var sensors = _db.Sensors.ToArray();
-            var sensor = sensors.FirstOrDefault(q=>string.Equals(q.Location, location, StringComparison.CurrentCultureIgnoreCase));
-
-            if (sensor == null)
+            var sensorID = "";
+            switch (location)
             {
-                _logger.LogError($"Sensor not found for {location}");
-                return new WeatherForecast();
+                case "Living Room":
+                    sensorID = "1";
+                    break;
+                case "Bedroom":
+                    sensorID = "2";
+                    break;
+                case "Kitchen":
+                    sensorID = "3";
+                    break;
+                default:
+                    sensorID = "0";
+                    break;
             }
+
+            _logger.LogInformation($"sensorID: {sensorID}, location: {location}, value: {tempC}");
+
+            //var sensors = _db.Sensors.ToArray();
+            //var sensor = sensors.FirstOrDefault(q=>string.Equals(q.Location, location, StringComparison.CurrentCultureIgnoreCase));
+
+            //if (sensor == null)
+            //{
+            //    _logger.LogError($"Sensor not found for {location}");
+            //   return new WeatherForecast();
+            //}
 
             return new WeatherForecast()
             {
-                Description = "",
-                Location    = sensor.Location,
-                SensorID    = sensor.Id,
-                SensorType  = sensor.Type,
-                Status      = sensor.Status,
+                Location    = location,
+                SensorID    = sensorID,
                 Timestamp   = DateTimeOffset.UtcNow.UtcDateTime,
-                Unit        = sensor.Unit,
                 Value       = tempC
             };
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id}")]
         public WeatherForecast Get(int id)
         {
             var tempC = Random.Shared.Next(-20, 55);
-            _logger.LogInformation($"id: {id}; tempC: {tempC}");
 
-            var sensor = _db.Sensors.FirstOrDefault(q=>q.Id==id);
-            
-            if (sensor == null)
+            var location = "";
+            switch (id)
             {
-                _logger.LogError($"Sensor not found by id={id}");
-                return new WeatherForecast();
+                case 1:
+                    location = "Living Room";
+                    break;
+                case 2:
+                    location = "Bedroom";
+                    break;
+                case 3:
+                    location = "Kitchen";
+                    break;
+                default:
+                    location = "Unknown";
+                    break;
             }
 
+            _logger.LogInformation($"sensorID: {id}, location: {location}, value: {tempC}");
+            
             return new WeatherForecast()
             {
-                Description = "",
-                Location    = sensor.Location,
-                SensorID    = sensor.Id,
-                SensorType  = sensor.Type,
-                Status      = sensor.Status,
-                Timestamp   = DateTimeOffset.UtcNow.UtcDateTime,
-                Unit        = sensor.Unit,
-                Value       = tempC
+                Location  = location,
+                SensorID  = id.ToString(),
+                Timestamp = DateTimeOffset.UtcNow.UtcDateTime,
+                Value     = tempC
             };
         }
     }

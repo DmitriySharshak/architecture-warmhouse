@@ -1,0 +1,33 @@
+@startuml "Тёплый дом" - Диаграмма компонентов сервиса реестра устройств
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов сервиса реестра устройств
+
+Container(api_gateway, "API Gateway", "Nginx", "Единая точка входа, маршрутизация")
+Container(device_registry, "Реестр устройств", ".NET, PostgreSQL", "Регистрация и управление устройствами")
+Container(telemetry_service, "Сервис телеметрии", ".Net, Kafka Consumer", "Прием и обработка данных с устройств")
+
+Component(device_api, "Device API", ".NET, gRPC/HTTP", "Внешний API")
+Component(device_repository, "Device Repository", ".NET, linq2db", "Работа с БД устройств")
+Component(provisioning_service, "Provisioning Service", ".NET", "Саморегистрация устройств")
+Component(device_validator, "Device Validator", ".NET", "Валидация данных устройства")
+Component(device_factory, "Device Factory", ".NET", "Создание объектов устройств")
+
+' Модели данных
+Component(device_model, "Device Model", ".NET", "Модель устройства")
+Component(device_type_registry, "Device Type Registry", ".NET", "Реестр типов устройств")
+
+' Внешние зависимости
+ContainerDb(devices_db, "PostgreSQL", "База устройств", "Хранение метаданных")
+
+' Связи
+Rel(api_gateway, device_api, "Запрашивает список устройств", "HTTP")
+Rel(telemetry_service, device_api, "Валидирует устройство", "gRPC")
+Rel(device_api, device_repository, "CRUD операции", "Repository Pattern")
+Rel(device_repository, devices_db, "Сохраняет/читает", "SQL")
+Rel(provisioning_service, device_factory, "Создает новое устройство", "Factory Method")
+Rel(device_factory, device_model, "Использует модель", "Object Creation")
+Rel(device_validator, device_type_registry, "Проверяет тип", "Type Validation")
+
+
+@enduml
