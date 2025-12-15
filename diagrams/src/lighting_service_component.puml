@@ -1,0 +1,23 @@
+@startuml "Тёплый дом" - Диаграмма компонентов сервиса освещения
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов сервиса управления освещением
+
+Container(heating_service, "Сервис управления освещением", ".Net, Kafka Producer", "Управление световыми приборами")
+
+' === Внутренние компоненты ===
+Component(http_api, "REST API", "Go, HTTP", "REST API")
+Component(heating_logic, "Бизнес-логика освещения", ".Net", "Логика")
+Component(kafka_producer, "Kafka Producer", ".Net", "Публикация событий по освещению")
+
+' === Внешние зависимости ===
+ContainerDb(message_broker, "Брокер сообщений", "Apache Kafka", "События и команды")
+
+' === Внутренние связи ===
+Rel(http_api, heating_logic, "Вызывает", "interface")
+Rel(heating_logic, kafka_producer, "Публикует события", "Event")
+
+' === Внешние связи ===
+Rel(kafka_producer, message_broker, "Публикует в топики", "Kafka Bin Protocol")
+
+@enduml

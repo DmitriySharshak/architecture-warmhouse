@@ -1,0 +1,58 @@
+@startuml "Тёплый дом" - Диаграмма контейнеров (To-Be)
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнеров системы "Тёплый дом" (To-Be)
+
+' === Люди и внешние системы ===
+Person(user, "Владелец дома", "Управляет устройставами через мобильное приложение или веб-интерфейс")
+
+System_Ext(device, "Умное устройство", "Датчик температуры, лампа, ворота и т.д.")
+
+' === Сервисы (контейнеры) ===
+Container(web_app, "Веб-приложение", "React + TypeScript", "SPA для управления умным домом")
+Container(mobile_app, "Мобильное приложение", "React Native", "Мобильный клиент для iOS/Android")
+Container(api_gateway, "API Gateway", "Nginx", "Единая точка входа, маршрутизация")
+
+Container(device_gateway, "Шлюз устройств", ".Net, AMQP/MQTT", "Единая точка входа для всех устройств")
+Container(device_registry, "Реестр устройств", ".Net, PostgreSQL", "Регистрация, инвентаризация и жизненный цикл устройств")
+
+Container(heating_service, "Сервис управления отоплением", "Go, Kafka Producer", "Управление температурой")
+Container(lighting_service, "Сервис управления освещением", ".Net, Kafka Producer", "Управление световыми приборами")
+Container(telemetry_service, "Сервис телеметрии", ".Net, Kafka Consumer", "Прием и обработка данных с устройств")
+Container(command_router, "Маршрутизатор команд", ".Net, Kafka Consumer, ArtemisMQ Publisher", "Маршрутизация команд от сервисов к устройствам")
+
+' === Базы данных и брокеры ===
+ContainerDb(devices_db, "База устройств", "PostgreSQL", "Метаданные устройств c привязкой к домам и пользователям")
+ContainerDb(message_broker, "Брокер сообщений", "Apache Kafka", "Асинхронная коммуникация между сервисами")
+
+' === Связи ===
+' Пользовательские интерфейсы
+Rel(user, web_app, "Использует", "HTTP")
+Rel(user, mobile_app, "Использует", "HTTP")
+
+' Внешние устройства
+Rel(device, device_gateway, "Подключается, отправляет данные, принимает команды", "MQTT")
+
+' API Gateway как единая точка входа
+Rel(web_app, api_gateway, "Вызывает API", "HTTP")
+Rel(mobile_app, api_gateway, "Вызывает API", "HTTP")
+
+' Сервисы за API Gateway
+Rel(api_gateway, device_registry, "Получает список устройств", "HTTP")
+Rel(api_gateway, heating_service, "Управление отоплением", "HTTP")
+Rel(api_gateway, lighting_service, "Управление освещением", "HTTP")
+
+' Коммуникация между сервисами
+Rel(device_gateway, message_broker, "Публикует телеметрию", "Kafka Bin Protocol")
+Rel(heating_service, message_broker, "Публикует пользовательские команды", "Kafka Bin Protocol")
+Rel(lighting_service, message_broker, "Публикует пользовательские команды", "Kafka Bin Protocol")
+Rel(command_router, message_broker, "Читает команды", "Kafka Bin Protocol")
+Rel(command_router, device_gateway, "Отправляет команды устройствам", "gRPC")
+Rel(telemetry_service, device_registry, "Информация об устройствах", "gRPC")
+Rel(telemetry_service, message_broker, "Читает телеметрию", "Kafka Bin Protocol")
+
+
+' Доступ к данным
+Rel(device_registry, devices_db, "Читает/записывает", "SQL")
+
+@enduml

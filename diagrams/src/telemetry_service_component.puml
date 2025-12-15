@@ -1,0 +1,26 @@
+@startuml "Тёплый дом" - Диаграмма компонентов сервиса телеметрии
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов сервиса телеметрии
+
+Container(telemetry_service, "Сервис телеметрии", ".NET, Kafka Consumer", "Прием и обработка данных с устройств")
+
+Component(kafka_consumer, "Kafka Consumer", ".NET", "Чтение потока телеметрии")
+Component(message_parser, "Message Parser", ".NET", "Парсинг и валидация сообщений")
+Component(telemetry_processor, "Telemetry Processor", ".NET", "Обработка данных")
+Component(storage_writer, "Storage Writer", ".NET", "Запись в БД")
+
+' Внешние зависимости
+ContainerDb(message_broker, "Apache Kafka", "Event streaming", "Поток телеметрии")
+ContainerDb(timescale_db, "TimescaleDB", "Time-series database", "Хранение телеметрии")
+Container(device_registry, "Реестр устройств", "gRPC", "Обогащение данных")
+
+' Связи
+Rel(kafka_consumer, message_broker, "Читает из топика", "Kafka Bin Protocol")
+Rel(kafka_consumer, message_parser, "Парсит сообщения", "Deserialization")
+Rel(message_parser, telemetry_processor, "Обрабатывает данные", "Data Processing")
+Rel(telemetry_processor, storage_writer, "Сохраняет данные", "Batch Insert")
+Rel(storage_writer, timescale_db, "Записывает в БД", "SQL")
+Rel(telemetry_processor, device_registry, "Обогащает данные", "gRPC")
+
+@enduml

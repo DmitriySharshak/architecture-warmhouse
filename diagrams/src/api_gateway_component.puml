@@ -1,0 +1,23 @@
+@startuml "Тёплый дом" - Диаграмма компонентов шлюза
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов Шлюза
+
+Container(api_gateway, "API Gateway", "Nginx", "Единая точка входа, маршрутизация")
+
+Component(http_listener, "HTTP Listener", "Nginx", "Прием входящих HTTP запросов (порт 80/443)")
+Component(router, "Request Router", "Nginx", "Маршрутизация на backend сервисы")
+Container(heating_service, "Сервис управления отоплением", "Go, Kafka Producer", "Управление температурой")
+Container(lighting_service, "Сервис управления освещением", ".Net, Kafka Producer", "Управление световыми приборами")
+
+' Конфигурации
+Component(routing_config, "Routing Config", "YAML/JSON", "Конфигурация маршрутов")
+
+' Связи
+Rel(router, heating_service, "Проксирует к сервису отопления", "HTTP")
+Rel(router, lighting_service, "Проксирует к сервису освещения", "HTTP")
+
+' Конфигурационные связи
+Rel(router, routing_config, "Читает конфигурацию", "YAML")
+
+@enduml

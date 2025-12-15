@@ -1,0 +1,38 @@
+@startuml "Тёплый дом" - Диаграмма классов реализации репозитория устройств
+
+title Диаграмма классов реализации репозитория устройств
+
+class DeviceRepositoryImpl {
+  - dbContext: DeviceDbContext
+  - logger: ILogger
+  
+  + AddAsync(device: Device): Task<DeviceId>
+  + UpdateAsync(device: Device): Task
+  + FindByIdAsync(deviceId: DeviceId): Task<Device?>
+  + FindBySerialNumberAsync(serialNumber: string): Task<Device?>
+  + FindByHouseIdAsync(houseId: HouseId): Task<List<Device>>
+}
+
+class DeviceDbContext {
+  + Devices: DbSet<DeviceEntity>
+}
+
+class DeviceEntity {
+  + Id: Guid
+  + SerialNumber: string
+  + DeviceTypeId: Guid
+  + HouseId: Guid
+  + Name: string
+  + Description: string
+  + location: string?
+  + Status: string
+  + Configuration: Jsonb?
+  + Metadata: Jsonb?
+  + CreatedAt: DateTime
+  + UpdatedAt: DateTime
+}
+
+DeviceRepositoryImpl --> DeviceDbContext : uses
+DeviceDbContext --> DeviceEntity : manages
+
+@enduml

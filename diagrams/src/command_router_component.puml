@@ -1,0 +1,26 @@
+@startuml "Тёплый дом" - Диаграмма компонентов маршурутизатора команд
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов маршрутизатора команд
+
+Container(command_router, "Маршрутизатор команд", ".NET, Kafka Consumer", "Маршрутизация команд")
+
+Component(kafka_consumer, "Kafka Consumer", ".NET", "Чтение команд из Kafka")
+Component(command_validator, "Command Validator", ".NET", "Валидация команд")
+'Component(device_resolver, "Device Resolver", ".NET", "Определение устройства-получателя")
+'Component(protocol_resolver, "Protocol Resolver", ".NET", "Определение протокола доставки")
+Component(command_queue_manager, "Command Queue Manager", ".NET", "Управление очередями команд")
+Component(artemis_publisher, "Artemis Publisher", ".NET", "Публикация в ArtemisMQ")
+
+' Внешние зависимости
+ContainerDb(message_broker, "Apache Kafka", "Event streaming", "Входящие команды")
+Container(device_gateway, "Шлюз устройств", "gRPC/Artemis", "Доставка команд")
+
+' Связи
+Rel(kafka_consumer, message_broker, "Читает команды", "Kafka Protocol")
+Rel(kafka_consumer, command_validator, "Валидирует команду", "Validation Rules")
+Rel(command_validator, command_queue_manager, "Ставит в очередь", "Queue Management")
+Rel(command_queue_manager, artemis_publisher, "Публикует команду", "AMQP/MQTT")
+Rel(artemis_publisher, device_gateway, "Доставляет команду", "Artemis Protocol")
+
+@enduml
