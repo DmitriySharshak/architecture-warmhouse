@@ -1,0 +1,103 @@
+@startuml "Тёплый дом" - ER-диаграмма
+
+!define table(x) class x << (T,#FFAAAA) >>
+!define primary_key(x) <b><color:blue>PK</color> ##x##
+!define foreign_key(x) <color:green>FK</color> ##x##
+
+title ER-диаграмма системы "Тёплый дом"
+
+table(User) {
+  {primary_key(id)} : uuid
+  phone_number : varchar(20)
+  full_name : varchar(255)
+  hashed_password : varchar(255)
+  created_at : timestamp
+  updated_at : timestamp
+  is_active : boolean
+}
+
+table(House) {
+  {primary_key(id)} : uuid
+  user_id : uuid {foreign_key(user.id)}
+  address : varchar(500)
+  created_at : timestamp
+}
+
+table(DeviceType) {
+  {primary_key(id)} : uuid
+  name : varchar(100) <<unique>>
+  category : enum('sensor', 'lamp', 'camera', 'controller')
+  model : varchar(100)
+  description : text <<nullable>>
+  capabilities : jsonb {["read_temperature", "set_temperature", "on_off"]}
+  protocol : enum('mqtt', 'http')
+  created_at : timestamp
+}
+
+table(Device) {
+  {primary_key(id)} : uuid
+  {primary_key(serial_number)} : varchar(100) <<unique>>
+  device_type_id : uuid {foreign_key(DeviceType.id)}
+  house_id : uuid {foreign_key(House.id)}
+  name : varchar(255)
+  description : text <<nullable>>
+  location : varchar(255) <<nullable>> {"living_room", "bedroom"}
+  status : enum('online', 'offline', 'error')
+  configuration : jsonb <<nullable>> {device-specific settings}
+  metadata : jsonb <<nullable>> {firmware_version, ip_address, etc.}
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+table(CommandHistory) {
+  {primary_key(id)} : bigint
+  user_id : uuid <<nullable>> {foreign_key(User.id)}
+  device_id : uuid {foreign_key(Device.id)}
+  command_type : varchar(100) {"set_temperature", "turn_on", "turn_off"}
+  command_payload : jsonb
+  status : enum('pending', 'sent', 'ack', 'failed')
+  sent_at : timestamp
+  ack_at : timestamp <<nullable>>
+  error_message : text <<nullable>>
+}
+
+table(UserHouseAccess) {
+  {primary_key(id)} : uuid
+  user_id : uuid {foreign_key(User.id)}
+  house_id : uuid {foreign_key(House.id)}
+  access_level : enum('owner', 'guest')
+}
+
+table(DevicePermission) {
+  {primary_key(id)} : uuid
+  user_id : uuid {foreign_key(User.id)}
+  device_id : uuid {foreign_key(Device.id)}
+  permissions : jsonb {e.g., ["read", "control", "configure"]}
+}
+
+' 1. User - House (one-to-many / many-to-many через UserHouseAccess)
+User "1" --o{ House : "владелец"
+User "1" --o{ UserHouseAccess : "права на дом"
+
+House ||--o{ UserHouseAccess : "привязка"
+
+' 2. House - Device (one-to-many)
+House ||--o{ Device : "привязка к дому"
+
+' 3. DeviceType - Device (one-to-many)
+DeviceType ||--o{ Device : "классификация"
+
+' 7. Device - CommandHistory (one-to-many)
+Device ||--o{ CommandHistory 
+
+' 8. User - CommandHistory (one-to-many, optional)
+User "1" --o{ CommandHistory : "история"
+
+' 14. User - DevicePermission (one-to-many)
+User "1" --o{ DevicePermission : "доступ к устройствам"
+
+' 15. Device - DevicePermission (one-to-many)
+Device ||--o{ DevicePermission : "права доступа"
+
+
+@enduml
